@@ -433,8 +433,8 @@ class Main {
 
 }
 
-class TextToSpeech{
-  constructor(){
+class TextToSpeech {
+  constructor() {
     this.synth = window.speechSynthesis
     this.voices = []
     this.pitch = 1.0
@@ -444,37 +444,32 @@ class TextToSpeech{
     this.ansText = document.getElementById("answerText")
     this.loader = document.getElementById("loader")
 
-    this.selectedVoice = 48 // this is Google-US en. Can set voice and language of choice
+    this.selectedVoice = 48
 
     this.currentPredictedWords = []
     this.waitTimeForQuery = 5000
 
-
     this.synth.onvoiceschanged = () => {
       this.populateVoiceList()
     }
-    
   }
 
-  populateVoiceList(){
-    if(typeof speechSynthesis === 'undefined'){
+  populateVoiceList() {
+    if (typeof speechSynthesis === 'undefined') {
       console.log("no synth")
       return
     }
     this.voices = this.synth.getVoices()
 
-    if(this.voices.indexOf(this.selectedVoice) > 0){
+    if (this.voices.indexOf(this.selectedVoice) > 0) {
       console.log(`${this.voices[this.selectedVoice].name}:${this.voices[this.selectedVoice].lang}`)
-    } else {
-      //alert("Selected voice for speech did not load or does not exist.\nCheck Internet Connection")
     }
-    
   }
 
-  clearPara(queryDetected){
+  clearPara(queryDetected) {
     this.textLine.innerText = '';
     this.ansText.innerText = ''
-    if(queryDetected){
+    if (queryDetected) {
       this.loader.style.display = "block"
     } else {
       this.loader.style.display = "none"
@@ -484,179 +479,132 @@ class TextToSpeech{
     this.currentPredictedWords = []
   }
 
-  speak(word){
+  // async getAPIResponse(query) {
+  //   this.loader.style.display = "block"
+  //   this.ansText.innerText = "Getting response..."
 
-    if(word == 'alexa'){
+  //   const url = `https://free-chatgpt-api.p.rapidapi.com/chat-completion-one?prompt=${encodeURIComponent(query)}`;
+
+  //   try {
+  //     const response = await fetch(url, {
+  //       method: 'GET',
+  //       headers: {
+  //         'X-RapidAPI-Host': 'free-chatgpt-api.p.rapidapi.com',
+  //         'X-RapidAPI-Key': '325dc6abaemshc05fd4caeb5b48dp1f5a66jsnee672d1b3e4b'
+  //       }
+  //     });
+
+  //     console.log('API Response:', response); // Debug log
+
+  //     if (!response.ok) {
+  //       throw new Error(`API response failed with status: ${response.status}`);
+  //     }
+
+  //     const data = await response.json();
+  //     console.log('API Data:', data); // Debug log
+      
+  //     if (data && data.content) {
+  //       this.ansText.innerText = data.content;
+  //     } else {
+  //       this.ansText.innerText = "Received unexpected response format";
+  //     }
+      
+  //   } catch (error) {
+  //     console.error('API Error:', error);
+  //     this.ansText.innerText = "Sorry, there was an error getting the response: " + error.message;
+  //   } finally {
+  //     this.loader.style.display = "none"
+  //     // Reset for next query
+  //     main.previousPrediction = -1;
+  //     main.startPredicting();
+  //   }
+  // }
+  async getAPIResponse(query) {
+    this.loader.style.display = "block";
+    this.ansText.innerText = "Getting response...";
+  
+    const url = `https://free-chatgpt-api.p.rapidapi.com/chat-completion-one?prompt=${encodeURIComponent(query)}`;
+  
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'X-RapidAPI-Host': 'free-chatgpt-api.p.rapidapi.com',
+          'X-RapidAPI-Key': '325dc6abaemshc05fd4caeb5b48dp1f5a66jsnee672d1b3e4b'
+        }
+      });
+  
+      console.log('API Response:', response); // Debug log
+  
+      if (!response.ok) {
+        throw new Error(`API response failed with status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      console.log('API Data:', data); // Debug log
+  
+      if (data && data.status === "success" && data.response) {
+        // Extract response text if status is 'success'
+        this.ansText.innerText = data.response;
+      } else {
+        this.ansText.innerText = "Received unexpected response format";
+      }
+      
+    } catch (error) {
+      console.error('API Error:', error);
+      this.ansText.innerText = "Sorry, there was an error getting the response: " + error.message;
+    } finally {
+      this.loader.style.display = "none";
+      // Reset for next query
+      main.previousPrediction = -1;
+      main.startPredicting();
+    }
+  }
+  
+  speak(word) {
+    if (word == 'alexa') {
       console.log("clear para")
       this.clearPara(true);
 
       setTimeout(() => {
-        // if no query detected after alexa is signed
-        if(this.currentPredictedWords.length == 1){
+        if (this.currentPredictedWords.length == 1) {
           this.clearPara(false)
         }
       }, this.waitTimeForQuery)
-    } 
+    }
 
-    if(word != 'alexa' && this.currentPredictedWords.length == 0){
+    if (word != 'alexa' && this.currentPredictedWords.length == 0) {
       console.log("first word should be alexa")
-      console.log(word)
       return
     }
 
-    // if(endWords.includes(word) && this.currentPredictedWords.length == 1 && (word != "hello" && word != "bye")){
-    //   console.log("end word detected early")
-    //   console.log(word)
-    //   return;
-    // }
-
-    if(this.currentPredictedWords.includes(word)){
-      // prevent word from being detected repeatedly in phrase
+    if (this.currentPredictedWords.includes(word)) {
       console.log("word already been detected in current phrase")
       return
     }
 
-
     this.currentPredictedWords.push(word)
-
-
     this.textLine.innerText += ' ' + word;
 
-
-    var utterThis = new SpeechSynthesisUtterance(word)
-
-    utterThis.onend = (evt) => {
-      if(endWords.includes(word)){
-         //if last word is one of end words start listening for transcribing
-        console.log("this was the last word")
-
-        main.setStatusText("Status: Waiting for Response")
-
-        let stt = new SpeechToText()
-      }
+    // When an end word is detected, send the complete query to RapidAPI
+    if (endWords.includes(word)) {
+      console.log("End word detected, sending query to API");
+      main.pausePredicting();
+      
+      // Remove 'alexa' from the query before sending
+      const queryWords = this.currentPredictedWords.filter(w => w !== 'alexa');
+      const completeQuery = "in less than 70 words , " + queryWords.join(' ');
+      console.log('Sending query:', completeQuery); // Debug log
+      
+      this.getAPIResponse(completeQuery);
+    } else {
+      // Speak the word for feedback as user builds the query
+      var utterThis = new SpeechSynthesisUtterance(word)
+      utterThis.voice = this.voices[this.selectedVoice]
+      utterThis.pitch = this.pitch
+      utterThis.rate = this.rate
+      this.synth.speak(utterThis)
     }
-
-    utterThis.onerror = (evt) => {
-      console.log("Error speaking")
-    }
-
-    utterThis.voice = this.voices[this.selectedVoice]
-
-    utterThis.pitch = this.pitch
-    utterThis.rate = this.rate
-
-    this.synth.speak(utterThis)
-
-  }
-
-
-}
-
-class SpeechToText{
-  constructor(){
-    this.interimTextLine = document.getElementById("interimText")
-    this.textLine = document.getElementById("answerText")
-    this.loader = document.getElementById("loader")
-    this.finalTranscript = ''
-    this.recognizing = false
-
-    this.recognition = new webkitSpeechRecognition();
-
-    this.recognition.continuous = true;
-    this.recognition.interimResults = true;
-
-    this.recognition.lang = 'en-US'
-
-    this.cutOffTime = 15000 // cut off speech to text after
-
-    this.recognition.onstart = () => {
-      this.recognizing = true;
-      console.log("started recognizing")
-      main.setStatusText("Status: Transcribing")
-    }
-
-    this.recognition.onerror = (evt) => {
-      console.log(evt + " recogn error")
-    }
-
-    this.recognition.onend = () => {
-      console.log("stopped recognizing")
-      if(this.finalTranscript.length == 0){
-        this.type("No response detected")
-
-      }
-      this.recognizing = false;
-
-      main.setStatusText("Status: Finished Transcribing")
-      // restart prediction after a pause
-      setTimeout(() => {
-        main.startPredicting()
-      }, 1000)
-    }
-
-    this.recognition.onresult = (event) => {
-      var interim_transcript = ''
-      if(typeof(event.results) == 'undefined'){
-        return;
-      }
-   
-
-      for (var i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-          this.finalTranscript += event.results[i][0].transcript;
-        } else {
-          interim_transcript += event.results[i][0].transcript;
-        }
-      }
-
-
-      this.interimType(interim_transcript)
-      this.type(this.finalTranscript)
-    }
-
-    setTimeout(()=>{
-      this.startListening();
-    },0)
-    
-
-    setTimeout(()=>{
-      this.stopListening()
-    },this.cutOffTime)
-  }
-
-  startListening(){
-    if(this.recognizing){
-      this.recognition.stop()
-      return
-    }
-
-    console.log("listening")
-
-    main.pausePredicting()
-
-    this.recognition.start()
-  }
-
-  stopListening(){
-    console.log("STOP LISTENING")
-    if(this.recognizing){
-      console.log("stop speech to text")
-      this.recognition.stop()
-
-      //restart predicting
-      main.startPredicting()
-      return
-    }
-  }
-
-  interimType(text){
-    this.loader.style.display = "none"
-    this.interimTextLine.innerText = text
-  }
-
-  type(text){
-    this.loader.style.display = "none"
-    this.textLine.innerText = text;
   }
 }
 
