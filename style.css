@@ -238,3 +238,9 @@ h1 .subtext {
     text-decoration: none;
     cursor: pointer;
 }
+#answerText{
+  display: flex;
+  margin-top: 24%;
+  font-size: 30px;
+  
+}
