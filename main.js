@@ -1,4 +1,3 @@
-
 import {KNNImageClassifier} from 'deeplearn-knn-image-classifier';
 import * as dl from 'deeplearn';
 
@@ -479,46 +478,6 @@ class TextToSpeech {
     this.currentPredictedWords = []
   }
 
-  // async getAPIResponse(query) {
-  //   this.loader.style.display = "block"
-  //   this.ansText.innerText = "Getting response..."
-
-  //   const url = `https://free-chatgpt-api.p.rapidapi.com/chat-completion-one?prompt=${encodeURIComponent(query)}`;
-
-  //   try {
-  //     const response = await fetch(url, {
-  //       method: 'GET',
-  //       headers: {
-  //         'X-RapidAPI-Host': 'free-chatgpt-api.p.rapidapi.com',
-  //         'X-RapidAPI-Key': '325dc6abaemshc05fd4caeb5b48dp1f5a66jsnee672d1b3e4b'
-  //       }
-  //     });
-
-  //     console.log('API Response:', response); // Debug log
-
-  //     if (!response.ok) {
-  //       throw new Error(`API response failed with status: ${response.status}`);
-  //     }
-
-  //     const data = await response.json();
-  //     console.log('API Data:', data); // Debug log
-      
-  //     if (data && data.content) {
-  //       this.ansText.innerText = data.content;
-  //     } else {
-  //       this.ansText.innerText = "Received unexpected response format";
-  //     }
-      
-  //   } catch (error) {
-  //     console.error('API Error:', error);
-  //     this.ansText.innerText = "Sorry, there was an error getting the response: " + error.message;
-  //   } finally {
-  //     this.loader.style.display = "none"
-  //     // Reset for next query
-  //     main.previousPrediction = -1;
-  //     main.startPredicting();
-  //   }
-  // }
   async getAPIResponse(query) {
     this.loader.style.display = "block";
     this.ansText.innerText = "Getting response...";
@@ -588,6 +547,11 @@ class TextToSpeech {
 
     // When an end word is detected, send the complete query to RapidAPI
     if (endWords.includes(word)) {
+      var utterThis = new SpeechSynthesisUtterance(word)
+      utterThis.voice = this.voices[this.selectedVoice]
+      utterThis.pitch = this.pitch
+      utterThis.rate = this.rate
+      this.synth.speak(utterThis)
       console.log("End word detected, sending query to API");
       main.pausePredicting();
       
@@ -607,6 +571,9 @@ class TextToSpeech {
     }
   }
 }
+
+
+
 
 var main = null;
 
